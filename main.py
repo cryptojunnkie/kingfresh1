@@ -10,29 +10,34 @@ def generate_signals(z_scores):
     for i in range(1, len(z_scores)):
         prev_z_score = z_scores[i - 1]
         curr_z_score = z_scores[i]
-        if prev_z_score <= -4 and curr_z_score > -4:
-            signals.append('Buy Signal (Buy 4)')
-        elif prev_z_score <= -3 and curr_z_score > -3:
-            signals.append('Buy Signal (Buy 3)')
-        elif prev_z_score <= -1 and curr_z_score > -1:
-            signals.append('Buy Signal (Buy 2)')
-        elif prev_z_score <= -0.4 and curr_z_score > -0.4:
-            signals.append('Buy Signal (Buy 1)')
-        elif prev_z_score >= 0.25 and curr_z_score < 0.25:
-            signals.append('Take Profit Signal (TP 1)')
-        elif prev_z_score >= 0.5 and curr_z_score < 0.5:
-            signals.append('Take Profit Signal (TP 2)')
-        elif prev_z_score >= 1 and curr_z_score < 1:
-            signals.append('Take Profit Signal (TP 3)')
+        
+        # Ensure valid types for comparison
+        if isinstance(prev_z_score, (float, np.float64)) and isinstance(curr_z_score, (float, np.float64)):
+            if prev_z_score <= -4 and curr_z_score > -4:
+                signals.append('Buy Signal (Buy 4)')
+            elif prev_z_score <= -3 and curr_z_score > -3:
+                signals.append('Buy Signal (Buy 3)')
+            elif prev_z_score <= -1 and curr_z_score > -1:
+                signals.append('Buy Signal (Buy 2)')
+            elif prev_z_score <= -0.4 and curr_z_score > -0.4:
+                signals.append('Buy Signal (Buy 1)')
+            elif prev_z_score >= 0.25 and curr_z_score < 0.25:
+                signals.append('Take Profit Signal (TP 1)')
+            elif prev_z_score >= 0.5 and curr_z_score < 0.5:
+                signals.append('Take Profit Signal (TP 2)')
+            elif prev_z_score >= 1 and curr_z_score < 1:
+                signals.append('Take Profit Signal (TP 3)')
+            else:
+                signals.append('No Signal')
         else:
-            signals.append('No Signal')
+            signals.append('No Signal')  # Handle invalid z_scores
     return signals
 
 def calculate_profit(last_buy, closing_price):
     if last_buy is None or closing_price is None or last_buy <= 0:
         return None, None
     profit_dollars = closing_price - last_buy
-    profit_percent = (profit_dollars / last_buy) * 100
+    profit_percent = (profit_dollars / last_buy) * 100 if last_buy > 0 else 0  # Prevent division by zero
     return profit_percent, profit_dollars
 
 def page_zscore_analysis():
@@ -107,8 +112,7 @@ def page_zscore_analysis():
                 # Calculate Floating Profit for open trades
                 if trades and trades[-1]['Status'] == 'Open':
                     current_price = close_prices[i] if close_prices[i] is not None else 0
-                    # Ensure last_buy_price is valid for calculation
-                    if last_buy_price is not None:
+                    if last_buy_price is not None:  # Ensure valid last buy price
                         trades[-1]['Floating Profit'] = current_price - last_buy_price
 
             data_rows.append([
@@ -152,12 +156,6 @@ def page_zscore_analysis():
     # Clear the progress bar and scanning message after processing
     progress_bar.empty()
     scanning_placeholder.empty()
-
-    # Final DataFrame display after all tickers are processed
-    
-    #st.write('### Final Signals Summary Table')
-    #st.markdown('<style>div.row-widget.stDataFrame {max-width:1800px;}</style>', unsafe_allow_html=True)  # Make the markdown style to extend max-width
-    #st.dataframe(df)
 
     # Trade history DataFrame
     st.write('### Trade History')
